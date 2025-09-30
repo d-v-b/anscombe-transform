@@ -58,7 +58,7 @@ def make_inverse_lookup(lookup_table: np.ndarray, output_type="int16") -> np.nda
 
 def lookup(movie: np.ndarray, lookup_table: np.ndarray) -> np.ndarray:
     """Apply lookup table to movie"""
-    return lookup_table[np.maximum(0, np.minimum(movie, lookup_table.size - 1))]
+    return lookup_table[np.maximum(0, np.minimum(movie.astype('uint64'), lookup_table.size - 1))]
 
 def encode(
         buf: np.ndarray, 
@@ -78,7 +78,7 @@ def encode(
     return encoded.astype(encoded_dtype)
 
 def decode(
-        buf: bytes, 
+        buf: bytes | np.ndarray, 
         *, 
         sensitivity: float, 
         zero_level: int, 
@@ -120,7 +120,7 @@ class AnscombeCodecV2:
     encoded_dtype: str = "int8"
     decoded_dtype: str = "int16"
 
-    def encode(self, buf: np.ndarray) -> bytes:
+    def encode(self, buf: np.ndarray) -> np.ndarray:
         return encode(
             buf,
             sensitivity=self.photon_sensitivity,
