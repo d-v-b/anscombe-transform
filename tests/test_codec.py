@@ -1,6 +1,7 @@
 from anscombe_numcodecs import AnscombeCodecV2
 import numpy as np
 import pytest
+from .conftest import nearly_equal
 
 def make_poisson_ramp_signals(shape=(10, 1, 1), min_rate=1, max_rate=5, dtype="int16"):
     assert isinstance(shape, tuple)
@@ -32,5 +33,6 @@ def test_poisson_encode_decode(test_data):
         encoded = codec.encode(example_data)
         decoded = codec.decode(encoded)
         recoded = codec.decode(codec.encode(decoded))
-        assert np.abs(decoded.ravel() - example_data.ravel()).max() < sensitivity / 2
+        assert nearly_equal(decoded, example_data, sensitivity)
         assert (decoded == recoded).all()
+
