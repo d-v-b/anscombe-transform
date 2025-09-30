@@ -33,6 +33,6 @@ def test_poisson_encode_decode(test_data):
         encoded = codec.encode(example_data)
         decoded = codec.decode(encoded)
         recoded = codec.decode(codec.encode(decoded))
-        assert nearly_equal(decoded, example_data, sensitivity)
+        assert nearly_equal(decoded, example_data, sensitivity/2)
         assert (decoded == recoded).all()
 

@@ -1,9 +1,9 @@
 from __future__ import annotations
 import numpy as np
 
-def nearly_equal(a: np.ndarray, b:np.ndarray, sensitivity: int) -> bool:
+def nearly_equal(a: np.ndarray, b:np.ndarray, sensitivity: float) -> bool:
         """
         Compare if two arrays are approximately equal within a tolerance.
         The arrays are linearized before comparison.
         """
-        return np.allclose(a.ravel(), b.ravel(), atol=sensitivity/2, rtol=0)
+        return np.allclose(np.array(a).ravel(), b.ravel(), atol=sensitivity, rtol=0)
