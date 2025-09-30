@@ -1,19 +1,28 @@
 """
 Numcodecs Codec implementation for Anscombe Transform for photon-limited data.
 """
-
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import ClassVar, Literal, Self
 import numpy as np
 import numcodecs
-from numcodecs.abc import Codec
+import numpy.typing as npt
+from typing import TypedDict
+class AnscombeCodecConfig(TypedDict):
+    zero_level: int
+    photon_sensitivity: float
 
+class AnscomeCodecJSON_V2(AnscombeCodecConfig):
+    id: Literal["anscombe-v1"]
 
+# TODO: expose these parameters in the configuration for the codec
 def make_anscombe_lookup(
     sensitivity: float,
     input_max: int = 0x7FFF,
     zero_level: int = 0,
     beta: float = 0.5,
-    output_type="uint8",
-):
+    output_type: str="uint8",
+) -> np.ndarray:
     """
     Compute the Anscombe lookup table.
     The lookup converts a linear grayscale image into a uniform variance image.
@@ -49,8 +58,51 @@ def lookup(movie: np.ndarray, lookup_table: np.ndarray) -> np.ndarray:
     """Apply lookup table to movie"""
     return lookup_table[np.maximum(0, np.minimum(movie, lookup_table.size - 1))]
 
+def encode(
+        buf: np.ndarray, 
+        *, 
+        sensitivity: float, 
+        zero_level: int, 
+        encoded_dtype: str) -> np.ndarray:
+    """
+    Encode an array into a buffer of bytes.
+    """
+    lut = make_anscombe_lookup(
+        sensitivity,
+        output_type=encoded_dtype,
+        zero_level=zero_level,
+    )
+    encoded = lookup(buf, lut)
+    shape = np.array((encoded.ndim,) + encoded.shape, dtype='uint32')
+    return shape.tobytes() + encoded.astype(encoded_dtype).tobytes()
 
-class AnscombeCodec(Codec):
+def decode(
+        buf: bytes, 
+        *, 
+        sensitivity: float, 
+        zero_level: int, 
+        encoded_dtype: npt.DtypeLike, 
+        decoded_dtype: npt.DTypeLike) -> np.ndarray:
+    """
+    Decode an array from a buffer of bytes.
+    """
+    lookup_table = make_anscombe_lookup(
+        sensitivity,
+        output_type=encoded_dtype,
+        zero_level=zero_level,
+    )
+    inverse_table = make_inverse_lookup(
+        lookup_table, output_type=decoded_dtype
+    )
+    ndims = np.frombuffer(buf[:4], "uint32")[0]
+    shape = np.frombuffer(buf[4 : 4 * (ndims + 1)], "uint32")
+    decoded = np.frombuffer(
+        buf[(ndims + 1) * 4 :], dtype=encoded_dtype
+    ).reshape(shape)
+    return lookup(decoded, inverse_table).astype(decoded_dtype)
+
+@dataclass(frozen=True, slots=True)
+class AnscombeCodecV2:
     """Codec for 3-dimensional Filter. The codec assumes that input data are of shape:
     (time, x, y).
 
@@ -64,46 +116,40 @@ class AnscombeCodec(Codec):
         This should pre-computed or measured directly on the instrument.
     """
 
-    codec_id = "anscombe-v1"
+    codec_id: ClassVar[Literal["anscombe-v1"]] = "anscombe-v1"
+    zero_level: int
+    photon_sensitivity: float
+    # TODO: decide if these are class variables or not
+    encoded_dtype: str = "int8"
+    decoded_dtype: str = "int16"
 
-    def __init__(
-        self,
-        zero_level,
-        photon_sensitivity,
-        encoded_dtype="int8",
-        decoded_dtype="int16",
-    ):
-        self.zero_level = zero_level
-        self.photon_sensitivity = photon_sensitivity
-        self.encoded_dtype = encoded_dtype
-        self.decoded_dtype = decoded_dtype
-
-    def encode(self, buf: np.ndarray) -> np.ndarray:
-        lookup_table = make_anscombe_lookup(
-            self.photon_sensitivity,
-            output_type=self.encoded_dtype,
+    def encode(self, buf: np.ndarray) -> bytes:
+        return encode(
+            buf,
+            sensitivity=self.photon_sensitivity,
             zero_level=self.zero_level,
+            encoded_dtype=self.encoded_dtype,
         )
-        encoded = lookup(buf, lookup_table)
-        shape = [encoded.ndim] + list(encoded.shape)
-        shape = np.array(shape, dtype="uint32")
-        return shape.tobytes() + encoded.astype(self.encoded_dtype).tobytes()
-
-    def decode(self, buf: bytes, out=None) -> np.ndarray:
-        lookup_table = make_anscombe_lookup(
-            self.photon_sensitivity,
-            output_type=self.encoded_dtype,
+    
+    def decode(self, buf: bytes, out: object | None = None) -> np.ndarray:
+        return decode(
+            buf,
+            sensitivity=self.photon_sensitivity,
             zero_level=self.zero_level,
+            encoded_dtype=self.encoded_dtype,
+            decoded_dtype=self.decoded_dtype,
         )
-        inverse_table = make_inverse_lookup(
-            lookup_table, output_type=self.decoded_dtype
-        )
-        ndims = np.frombuffer(buf[:4], "uint32")[0]
-        shape = np.frombuffer(buf[4 : 4 * (ndims + 1)], "uint32")
-        decoded = np.frombuffer(
-            buf[(ndims + 1) * 4 :], dtype=self.encoded_dtype
-        ).reshape(shape)
-        return lookup(decoded, inverse_table).astype(self.decoded_dtype)
+
+    def get_config(self) -> AnscomeCodecJSON_V2:
+        return {
+            "id": self.codec_id, 
+            "zero_level": self.zero_level, 
+            "photon_sensitivity": self.photon_sensitivity
+            }
+    
+    @classmethod
+    def from_config(cls, config: AnscomeCodecJSON_V2) -> Self:
+        return cls(zero_level=config["zero_level"], photon_sensitivity=config["photon_sensitivity"])
 
 
-numcodecs.register_codec(AnscombeCodec)
+numcodecs.register_codec(AnscombeCodecV2)

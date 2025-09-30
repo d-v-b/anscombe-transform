@@ -1,4 +1,4 @@
-from anscombe_numcodecs import AnscombeCodec
+from anscombe_numcodecs import AnscombeCodecV2
 import numpy as np
 import pytest
 
@@ -24,7 +24,7 @@ def test_data(dtype="int16"):
     return [test2d, test2d_long]
 
 def test_poisson_encode_decode(test_data):
-    codec = AnscombeCodec(
+    codec = AnscombeCodecV2(
         zero_level=0,
         photon_sensitivity=sensitivity,
         encoded_dtype='uint8', 
