@@ -8,6 +8,8 @@ import numpy as np
 import numcodecs
 import numpy.typing as npt
 from typing import TypedDict
+from zarr.abc.codec import ArrayArrayCodec
+
 class AnscombeCodecConfig(TypedDict):
     zero_level: int
     photon_sensitivity: float
@@ -73,8 +75,7 @@ def encode(
         zero_level=zero_level,
     )
     encoded = lookup(buf, lut)
-    shape = np.array((encoded.ndim,) + encoded.shape, dtype='uint32')
-    return shape.tobytes() + encoded.astype(encoded_dtype).tobytes()
+    return encoded.astype(encoded_dtype)
 
 def decode(
         buf: bytes, 
@@ -94,11 +95,7 @@ def decode(
     inverse_table = make_inverse_lookup(
         lookup_table, output_type=decoded_dtype
     )
-    ndims = np.frombuffer(buf[:4], "uint32")[0]
-    shape = np.frombuffer(buf[4 : 4 * (ndims + 1)], "uint32")
-    decoded = np.frombuffer(
-        buf[(ndims + 1) * 4 :], dtype=encoded_dtype
-    ).reshape(shape)
+    decoded = np.frombuffer(buf, dtype=encoded_dtype)
     return lookup(decoded, inverse_table).astype(decoded_dtype)
 
 @dataclass(frozen=True, slots=True)
@@ -153,3 +150,8 @@ class AnscombeCodecV2:
 
 
 numcodecs.register_codec(AnscombeCodecV2)
+
+
+@dataclass(frozen=True, slots=True)
+class AnscombeCodecV3(ArrayArrayCodec):
+    is_fixed_size: bool = True

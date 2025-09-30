@@ -2,8 +2,6 @@ from anscombe_numcodecs import AnscombeCodecV2
 import numpy as np
 import pytest
 
-DEBUG = False
-
 def make_poisson_ramp_signals(shape=(10, 1, 1), min_rate=1, max_rate=5, dtype="int16"):
     assert isinstance(shape, tuple)
     assert len(shape) == 3
@@ -30,14 +28,9 @@ def test_poisson_encode_decode(test_data):
         encoded_dtype='uint8', 
         decoded_dtype='int16'
     )
-    
     for example_data in test_data:
         encoded = codec.encode(example_data)
         decoded = codec.decode(encoded)
         recoded = codec.decode(codec.encode(decoded))
-        assert np.abs(decoded - example_data).max() < sensitivity / 2
+        assert np.abs(decoded.ravel() - example_data.ravel()).max() < sensitivity / 2
         assert (decoded == recoded).all()
-         
-if __name__ == '__main__':
-    list_data = test_data("int16")
-    test_poisson_encode_decode(list_data)
