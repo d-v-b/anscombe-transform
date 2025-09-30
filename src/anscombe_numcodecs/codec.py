@@ -9,6 +9,8 @@ import numcodecs
 import numpy.typing as npt
 from typing import TypedDict
 from zarr.abc.codec import ArrayArrayCodec
+from zarr.core.array_spec import ArraySpec
+from zarr.core.dtype import parse_dtype
 
 class AnscombeCodecConfig(TypedDict):
     zero_level: int
@@ -154,4 +156,111 @@ numcodecs.register_codec(AnscombeCodecV2)
 
 @dataclass(frozen=True, slots=True)
 class AnscombeCodecV3(ArrayArrayCodec):
+    """Zarr v3 codec for Anscombe Transform for photon-limited data.
+
+    Parameters
+    ----------
+    zero_level : int
+        Signal level when no photons are recorded.
+    photon_sensitivity : float
+        Conversion scalar to convert the measured signal into absolute photon numbers.
+    encoded_dtype : str
+        Data type for encoded (compressed) data.
+    decoded_dtype : str
+        Data type for decoded (original) data.
+    """
+    zero_level: int
+    photon_sensitivity: float
+    encoded_dtype: str = "uint8"
+    decoded_dtype: str = "int16"
     is_fixed_size: bool = True
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Self:
+        """Create codec instance from configuration dictionary."""
+        config = data.get("configuration", {})
+        return cls(
+            zero_level=config["zero_level"],
+            photon_sensitivity=config["photon_sensitivity"],
+            encoded_dtype=config.get("encoded_dtype", "uint8"),
+            decoded_dtype=config.get("decoded_dtype", "int16")
+        )
+
+    def to_dict(self) -> dict:
+        """Convert codec to configuration dictionary."""
+        return {
+            "name": "anscombe-v1",
+            "configuration": {
+                "zero_level": self.zero_level,
+                "photon_sensitivity": self.photon_sensitivity,
+                "encoded_dtype": self.encoded_dtype,
+                "decoded_dtype": self.decoded_dtype
+            }
+        }
+
+    def resolve_metadata(self, chunk_spec: ArraySpec) -> ArraySpec:
+        """Resolve metadata for encoded output."""
+        return ArraySpec(
+            shape=chunk_spec.shape,
+            dtype=parse_dtype(np.dtype(self.encoded_dtype), zarr_format=3),
+            fill_value=chunk_spec.fill_value,
+            config=chunk_spec.config,
+            prototype=chunk_spec.prototype,
+        )
+
+    def _encode(self, buf: np.ndarray) -> np.ndarray:
+        """Synchronous encode method for direct use."""
+        return encode(
+            buf,
+            sensitivity=self.photon_sensitivity,
+            zero_level=self.zero_level,
+            encoded_dtype=self.encoded_dtype
+        )
+
+    def _decode(self, buf: np.ndarray) -> np.ndarray:
+        """Synchronous decode method for direct use."""
+        return decode(
+            buf.tobytes(),
+            sensitivity=self.photon_sensitivity,
+            zero_level=self.zero_level,
+            encoded_dtype=self.encoded_dtype,
+            decoded_dtype=self.decoded_dtype
+        )
+
+    async def _encode_single(
+        self,
+        chunk_array,
+        chunk_spec,
+    ):
+        """Encode a single chunk using Anscombe transform."""
+        # Convert NDBuffer to numpy array
+        data = chunk_array.as_numpy_array()
+
+        # Apply encoding
+        encoded = self._encode(data)
+
+        # Return as NDBuffer
+        return chunk_array.from_numpy_array(encoded)
+
+    async def _decode_single(
+        self,
+        chunk_array,
+        chunk_spec,
+    ):
+        """Decode a single chunk using inverse Anscombe transform."""
+        # Convert NDBuffer to numpy array
+        data = chunk_array.as_numpy_array()
+
+        # Apply decoding
+        decoded = self._decode(data)
+
+        # Reshape to original shape
+        decoded = decoded.reshape(chunk_spec.shape)
+
+        # Return as NDBuffer
+        return chunk_array.from_numpy_array(decoded)
+
+
+# Register codec with zarr
+from zarr.registry import register_codec
+register_codec("anscombe-v1", AnscombeCodecV3)
