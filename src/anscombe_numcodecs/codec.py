@@ -163,7 +163,7 @@ class AnscombeCodecV3(ArrayArrayCodec):
     zero_level : int
         Signal level when no photons are recorded.
     photon_sensitivity : float
-        Conversion scalar to convert the measured signal into absolute photon numbers.
+        Estimated signal intensity increase per quantum (e.g. photon)
     encoded_dtype : str
         Data type for encoded (compressed) data.
     decoded_dtype : str
