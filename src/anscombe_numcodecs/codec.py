@@ -60,7 +60,7 @@ def make_inverse_lookup(lookup_table: np.ndarray, output_type="int16") -> np.nda
 
 def lookup(movie: np.ndarray, lookup_table: np.ndarray) -> np.ndarray:
     """Apply lookup table to movie"""
-    return lookup_table[np.maximum(0, np.minimum(movie.astype('uint64'), lookup_table.size - 1))]
+    return lookup_table[np.maximum(0, np.minimum(movie, lookup_table.size - 1))]
 
 def encode(
         buf: np.ndarray, 
