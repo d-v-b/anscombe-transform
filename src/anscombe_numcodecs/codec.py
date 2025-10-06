@@ -119,7 +119,7 @@ class AnscombeCodecV2:
     zero_level: int
     photon_sensitivity: float
     # TODO: decide if these are class variables or not
-    encoded_dtype: str = "int8"
+    encoded_dtype: str = "uint8"
     decoded_dtype: str = "int16"
 
     def encode(self, buf: np.ndarray) -> np.ndarray:
