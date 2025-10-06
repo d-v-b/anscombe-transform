@@ -1,6 +1,8 @@
-from anscombe_transform import AnscombeTransformV2
 import numpy as np
 import pytest
+
+from anscombe_transform import AnscombeTransformV2
+
 from .conftest import nearly_equal
 
 
@@ -22,12 +24,8 @@ sensitivity = 100.0
 
 @pytest.fixture
 def test_data(dtype="int16"):
-    test2d = make_poisson_ramp_signals(
-        shape=(50, 1, 1), min_rate=1, max_rate=5, dtype=dtype
-    )
-    test2d_long = make_poisson_ramp_signals(
-        shape=(1, 50, 1), min_rate=1, max_rate=5, dtype=dtype
-    )
+    test2d = make_poisson_ramp_signals(shape=(50, 1, 1), min_rate=1, max_rate=5, dtype=dtype)
+    test2d_long = make_poisson_ramp_signals(shape=(1, 50, 1), min_rate=1, max_rate=5, dtype=dtype)
     return [test2d, test2d_long]
 
 

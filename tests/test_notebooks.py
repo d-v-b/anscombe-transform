@@ -1,7 +1,10 @@
 """Test Jupyter notebooks in examples/ directory."""
+
 from __future__ import annotations
-import pytest
+
 from pathlib import Path
+
+import pytest
 
 # Skip all tests in this module if nbmake is not installed
 pytest.importorskip("nbmake", reason="nbmake not installed - install with: pip install nbmake")
@@ -30,10 +33,7 @@ def test_notebook_execution(notebook_path):
     # This ensures relative paths in the notebook work correctly
     notebook_dir = nb_path.parent
     client = NotebookClient(
-        nb,
-        timeout=600,
-        kernel_name="python3",
-        resources={"metadata": {"path": str(notebook_dir)}}
+        nb, timeout=600, kernel_name="python3", resources={"metadata": {"path": str(notebook_dir)}}
     )
 
     try:

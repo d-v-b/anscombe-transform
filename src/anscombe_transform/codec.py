@@ -3,12 +3,13 @@ Numcodecs Codec implementation for Anscombe Transform for photon-limited data.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import ClassVar, Literal, Self
-import numpy as np
+from typing import ClassVar, Literal, Self, TypedDict
+
 import numcodecs
+import numpy as np
 import numpy.typing as npt
-from typing import TypedDict
 from zarr.abc.codec import ArrayArrayCodec
 from zarr.core.array_spec import ArraySpec
 from zarr.core.dtype import parse_dtype
@@ -37,16 +38,13 @@ def make_anscombe_lookup(
     :param input_max: the maximum value in the input
     :param beta: the grayscale quantization step expressed in units of noise std dev
     """
-    xx = (
-        np.r_[: input_max + 1] - zero_level
-    ) / conversion_gain  # input expressed in photon rates
+    xx = (np.r_[: input_max + 1] - zero_level) / conversion_gain  # input expressed in photon rates
     zero_slope = 1 / beta / np.sqrt(3 / 8)  # slope for negative values
     offset = zero_level * zero_slope / conversion_gain
     lookup_table = np.round(
         offset
         + (xx < 0) * (xx * zero_slope)
-        + (xx >= 0)
-        * (2.0 / beta * (np.sqrt(np.maximum(0, xx) + 3 / 8) - np.sqrt(3 / 8)))
+        + (xx >= 0) * (2.0 / beta * (np.sqrt(np.maximum(0, xx) + 3 / 8) - np.sqrt(3 / 8)))
     )
     lookup = lookup_table.astype(output_type)
     assert np.diff(lookup_table).min() >= 0, "non-monotonic lookup generated"
@@ -149,9 +147,7 @@ class AnscombeTransformV2:
 
     @classmethod
     def from_config(cls, config: AnscomeCodecJSON_V2) -> Self:
-        return cls(
-            zero_level=config["zero_level"], conversion_gain=config["conversion_gain"]
-        )
+        return cls(zero_level=config["zero_level"], conversion_gain=config["conversion_gain"])
 
 
 numcodecs.register_codec(AnscombeTransformV2)
