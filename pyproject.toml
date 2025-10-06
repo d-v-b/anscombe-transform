@@ -31,6 +31,15 @@ dependencies = [
   "scikit-learn",
 ]
 
+[project.optional-dependencies]
+test = [
+  "pytest>=7.0",
+  "nbmake",
+  "scipy",
+  "imageio",
+  "matplotlib",
+]
+
 # Dependencies will be managed via requirements.txt
 
 [project.urls]
