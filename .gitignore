@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Automatically-generated version indicator
+src/anscome_numcodecs/version.py
+
+# OSX file system db
+.DS_Store
+
+# VSCode
+.vscode/
