@@ -3,7 +3,7 @@ requires = ["hatchling>=1.27.0", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
-name = "anscombe_numcodecs"
+name = "anscombe_transform"
 dynamic = ["version"]
 
 authors = [
@@ -46,13 +46,13 @@ docs = [
     ]
 
 [project.urls]
-Homepage = "https://github.com/datajoint/anscombe-numcodecs"
-Source = "https://github.com/datajoint/anscombe-numcodecs"
-Issues = "https://github.com/datajoint/anscombe-numcodecs/issues"
+Homepage = "https://github.com/datajoint/anscombe-transform"
+Source = "https://github.com/datajoint/anscombe-transform"
+Issues = "https://github.com/datajoint/anscombe-transform/issues"
 
 [tool.hatch]
 version.source = "vcs"
-build.hooks.vcs.version-file = "src/anscombe_numcodecs/version.py"
+build.hooks.vcs.version-file = "src/anscombe_transform/version.py"
 
 # Test the package against the latest version of
 # upstream dependencies

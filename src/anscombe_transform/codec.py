@@ -104,7 +104,7 @@ def decode(
 
 
 @dataclass(frozen=True, slots=True)
-class AnscombeCodecV2:
+class AnscombeTransformV2:
     """Codec for 3-dimensional Filter. The codec assumes that input data are of shape:
     (time, x, y).
 
@@ -157,11 +157,11 @@ class AnscombeCodecV2:
         )
 
 
-numcodecs.register_codec(AnscombeCodecV2)
+numcodecs.register_codec(AnscombeTransformV2)
 
 
 @dataclass(frozen=True, slots=True)
-class AnscombeCodecV3(ArrayArrayCodec):
+class AnscombeTransformV3(ArrayArrayCodec):
     """Zarr v3 codec for Anscombe Transform for photon-limited data.
 
     Parameters
@@ -271,4 +271,4 @@ class AnscombeCodecV3(ArrayArrayCodec):
 # Register codec with zarr
 from zarr.registry import register_codec
 
-register_codec("anscombe-v1", AnscombeCodecV3)
+register_codec("anscombe-v1", AnscombeTransformV3)

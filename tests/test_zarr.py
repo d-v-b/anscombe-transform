@@ -1,7 +1,7 @@
 from __future__ import annotations
 import numpy as np
 from zarr import create_array, open_array
-from anscombe_numcodecs import AnscombeCodecV2, AnscombeCodecV3
+from anscombe_transform import AnscombeTransformV2, AnscombeTransformV3
 from tests.conftest import nearly_equal
 
 
@@ -10,7 +10,7 @@ def test_zarr_v2_roundtrip() -> None:
     encoded_dtype = "uint8"
     data = np.random.poisson(100, size=(20, 20)).astype(decoded_dtype)
     sensitivity = 100.0
-    codec = AnscombeCodecV2(
+    codec = AnscombeTransformV2(
         photon_sensitivity=sensitivity,
         zero_level=0,
         encoded_dtype=encoded_dtype,
@@ -34,7 +34,7 @@ def test_zarr_v3_roundtrip() -> None:
     encoded_dtype = "uint8"
     data = np.random.poisson(100, size=(20, 20)).astype(decoded_dtype)
     sensitivity = 100.0
-    codec = AnscombeCodecV3(
+    codec = AnscombeTransformV3(
         photon_sensitivity=sensitivity,
         zero_level=0,
         encoded_dtype=encoded_dtype,

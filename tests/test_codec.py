@@ -1,4 +1,4 @@
-from anscombe_numcodecs import AnscombeCodecV2
+from anscombe_transform import AnscombeTransformV2
 import numpy as np
 import pytest
 from .conftest import nearly_equal
@@ -32,7 +32,7 @@ def test_data(dtype="int16"):
 
 
 def test_poisson_encode_decode(test_data):
-    codec = AnscombeCodecV2(
+    codec = AnscombeTransformV2(
         zero_level=0,
         photon_sensitivity=sensitivity,
         encoded_dtype="uint8",

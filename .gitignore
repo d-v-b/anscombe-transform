@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # Automatically-generated version indicator
-src/anscombe_numcodecs/version.py
+src/anscombe_transform/version.py
 
 # OSX file system db
 .DS_Store
