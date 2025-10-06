@@ -1,10 +1,11 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "anscombe_numcodecs"
-version = "0.1.2"
+dynamic = ["version"]
+
 authors = [
   { name = "Jerome Lecoq", email = "jeromel@alleninstitute.org" },
   { name = "Dimitri Yatsenko", email = "dimitr@datajoint.com" },
@@ -37,3 +38,16 @@ dependencies = [
 Homepage = "https://github.com/datajoint/anscombe-numcodecs"
 Source = "https://github.com/datajoint/anscombe-numcodecs"
 Issues = "https://github.com/datajoint/anscombe-numcodecs/issues"
+
+[tool.hatch]
+version.source = "vcs"
+build.hooks.vcs.version-file = "src/<package>/version.py"
+
+
+[dependency-groups]
+test = [
+    "pytest>=8.4.2",
+]
+dev = [
+  {include-group="test"}
+]
