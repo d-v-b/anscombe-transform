@@ -183,3 +183,16 @@ namespace_packages = false
 strict = true
 warn_unreachable = true
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+
+[tool.pytest.ini_options]
+minversion = "8"
+testpaths = ["tests", "docs"]
+log_cli_level = "INFO"
+xfail_strict = true
+addopts = [
+    "--durations=10", "-ra", "--strict-config", "--strict-markers",
+]
+filterwarnings = [
+    "error",
+    "ignore:Numcodecs codecs are not in the Zarr version 3 specification.*:UserWarning"
+]
