@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27.0", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
@@ -41,12 +41,13 @@ Issues = "https://github.com/datajoint/anscombe-numcodecs/issues"
 
 [tool.hatch]
 version.source = "vcs"
-build.hooks.vcs.version-file = "src/<package>/version.py"
+build.hooks.vcs.version-file = "src/anscombe_numcodecs/version.py"
 
 
 [dependency-groups]
 test = [
     "pytest>=8.4.2",
+    "pytest-cov"
 ]
 dev = [
   {include-group="test"}
