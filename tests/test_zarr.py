@@ -11,7 +11,7 @@ def test_zarr_v2_roundtrip() -> None:
     data = np.random.poisson(100, size=(20, 20)).astype(decoded_dtype)
     sensitivity = 100.0
     codec = AnscombeTransformV2(
-        photon_sensitivity=sensitivity,
+        conversion_gain=sensitivity,
         zero_level=0,
         encoded_dtype=encoded_dtype,
         decoded_dtype=decoded_dtype,
@@ -35,7 +35,7 @@ def test_zarr_v3_roundtrip() -> None:
     data = np.random.poisson(100, size=(20, 20)).astype(decoded_dtype)
     sensitivity = 100.0
     codec = AnscombeTransformV3(
-        photon_sensitivity=sensitivity,
+        conversion_gain=sensitivity,
         zero_level=0,
         encoded_dtype=encoded_dtype,
         decoded_dtype=decoded_dtype,
