@@ -174,3 +174,12 @@ ignore = [
     "COM819",
     "TC006",
 ]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+namespace_packages = false
+
+strict = true
+warn_unreachable = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
