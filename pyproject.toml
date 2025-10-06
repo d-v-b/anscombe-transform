@@ -79,6 +79,11 @@ features = ["docs"]
 [tool.hatch.envs.test]
 features = ["test"]
 
+
+[[tool.hatch.envs.test.matrix]]
+python = ["3.11", "3.12", "3.13"]
+numpy = ["1.26", "2.2"]
+
 [dependency-groups]
 test = [
     "pytest==8.4.2",
