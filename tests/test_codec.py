@@ -1,8 +1,7 @@
-from anscombe_numcodecs import AnscombeCodec
+from anscombe_numcodecs import AnscombeCodecV2
 import numpy as np
 import pytest
-
-DEBUG = False
+from .conftest import nearly_equal
 
 def make_poisson_ramp_signals(shape=(10, 1, 1), min_rate=1, max_rate=5, dtype="int16"):
     assert isinstance(shape, tuple)
@@ -24,20 +23,16 @@ def test_data(dtype="int16"):
     return [test2d, test2d_long]
 
 def test_poisson_encode_decode(test_data):
-    codec = AnscombeCodec(
+    codec = AnscombeCodecV2(
         zero_level=0,
         photon_sensitivity=sensitivity,
         encoded_dtype='uint8', 
         decoded_dtype='int16'
     )
-    
     for example_data in test_data:
         encoded = codec.encode(example_data)
         decoded = codec.decode(encoded)
         recoded = codec.decode(codec.encode(decoded))
-        assert np.abs(decoded - example_data).max() < sensitivity / 2
+        assert nearly_equal(decoded, example_data, sensitivity/2)
         assert (decoded == recoded).all()
-         
-if __name__ == '__main__':
-    list_data = test_data("int16")
-    test_poisson_encode_decode(list_data)
+

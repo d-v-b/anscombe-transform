@@ -8,14 +8,15 @@ version = "0.1.2"
 authors = [
   { name = "Jerome Lecoq", email = "jeromel@alleninstitute.org" },
   { name = "Dimitri Yatsenko", email = "dimitr@datajoint.com" },
+  { name = "Davis Bennett", email = "davis.v.bennett@gmail.com" },
 ]
 maintainers = [
   { name = "Dimitri Yatsenko", email = "dimitr@datajoint.com" },
 ]
 license = { file = "LICENSE" }
-description = "Numcodecs implementation for compressing photon-limited movies."
+description = "Zarr V2 and V3 codecs for compressing photon-limited movies."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 keywords = ["video compression", "numcodecs", "zarr", "compression algorithms", "multimedia", "multiphoton microscopy"]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -26,9 +27,8 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy>=2.0",
-    "numcodecs>=0.1",
-    "scikit-learn",
+  "zarr>=3.1.2",
+  "scikit-learn",
 ]
 
 # Dependencies will be managed via requirements.txt
