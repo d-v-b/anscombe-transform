@@ -19,7 +19,6 @@ class AnscombeCodecConfig(TypedDict):
 class AnscomeCodecJSON_V2(AnscombeCodecConfig):
     id: Literal["anscombe-v1"]
 
-# TODO: expose these parameters in the configuration for the codec
 def make_anscombe_lookup(
     conversion_gain: float,
     input_max: int = 0x7FFF,
@@ -118,7 +117,6 @@ class AnscombeCodecV2:
     codec_id: ClassVar[Literal["anscombe-v1"]] = "anscombe-v1"
     zero_level: int
     conversion_gain: float
-    # TODO: decide if these are class variables or not
     encoded_dtype: str = "uint8"
     decoded_dtype: str = "int16"
 
