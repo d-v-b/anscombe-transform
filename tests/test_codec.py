@@ -25,7 +25,7 @@ def test_data(dtype="int16"):
 def test_poisson_encode_decode(test_data):
     codec = AnscombeCodecV2(
         zero_level=0,
-        photon_sensitivity=sensitivity,
+        conversion_gain=sensitivity,
         encoded_dtype='uint8', 
         decoded_dtype='int16'
     )

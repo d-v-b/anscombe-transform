@@ -14,14 +14,13 @@ from zarr.core.dtype import parse_dtype
 
 class AnscombeCodecConfig(TypedDict):
     zero_level: int
-    photon_sensitivity: float
+    conversion_gain: float
 
 class AnscomeCodecJSON_V2(AnscombeCodecConfig):
     id: Literal["anscombe-v1"]
 
-# TODO: expose these parameters in the configuration for the codec
 def make_anscombe_lookup(
-    sensitivity: float,
+    conversion_gain: float,
     input_max: int = 0x7FFF,
     zero_level: int = 0,
     beta: float = 0.5,
@@ -30,15 +29,15 @@ def make_anscombe_lookup(
     """
     Compute the Anscombe lookup table.
     The lookup converts a linear grayscale image into a uniform variance image.
-    :param sensitivity: the size of one photon in the linear input image.
+    :param conversion_gain: estimated signal intensity increase per quantum (e.g. photon)
     :param input_max: the maximum value in the input
     :param beta: the grayscale quantization step expressed in units of noise std dev
     """
     xx = (
         np.r_[: input_max + 1] - zero_level
-    ) / sensitivity  # input expressed in photon rates
+    ) / conversion_gain  # input expressed in photon rates
     zero_slope = 1 / beta / np.sqrt(3 / 8)  # slope for negative values
-    offset = zero_level * zero_slope / sensitivity
+    offset = zero_level * zero_slope / conversion_gain
     lookup_table = np.round(
         offset
         + (xx < 0) * (xx * zero_slope)
@@ -65,14 +64,14 @@ def lookup(movie: np.ndarray, lookup_table: np.ndarray) -> np.ndarray:
 def encode(
         buf: np.ndarray, 
         *, 
-        sensitivity: float, 
+        conversion_gain: float, 
         zero_level: int, 
         encoded_dtype: str) -> np.ndarray:
     """
     Encode an array into a buffer of bytes.
     """
     lut = make_anscombe_lookup(
-        sensitivity,
+        conversion_gain,
         output_type=encoded_dtype,
         zero_level=zero_level,
     )
@@ -82,7 +81,7 @@ def encode(
 def decode(
         buf: bytes | np.ndarray, 
         *, 
-        sensitivity: float, 
+        conversion_gain: float, 
         zero_level: int, 
         encoded_dtype: npt.DtypeLike, 
         decoded_dtype: npt.DTypeLike) -> np.ndarray:
@@ -90,7 +89,7 @@ def decode(
     Decode an array from a buffer of bytes.
     """
     lookup_table = make_anscombe_lookup(
-        sensitivity,
+        conversion_gain,
         output_type=encoded_dtype,
         zero_level=zero_level,
     )
@@ -110,22 +109,21 @@ class AnscombeCodecV2:
     zero_level : float
         Signal level when no photons are recorded.
         This should pre-computed or measured directly on the instrument.
-    photon_sensitivity : float
-        Conversion scalor to convert the measure signal into absolute photon numbers.
+    conversion_gain : float
+        Estimated signal intensity increase per quantum (e.g. photon)
         This should pre-computed or measured directly on the instrument.
     """
 
     codec_id: ClassVar[Literal["anscombe-v1"]] = "anscombe-v1"
     zero_level: int
-    photon_sensitivity: float
-    # TODO: decide if these are class variables or not
-    encoded_dtype: str = "int8"
+    conversion_gain: float
+    encoded_dtype: str = "uint8"
     decoded_dtype: str = "int16"
 
     def encode(self, buf: np.ndarray) -> np.ndarray:
         return encode(
             buf,
-            sensitivity=self.photon_sensitivity,
+            conversion_gain=self.conversion_gain,
             zero_level=self.zero_level,
             encoded_dtype=self.encoded_dtype,
         )
@@ -133,7 +131,7 @@ class AnscombeCodecV2:
     def decode(self, buf: bytes, out: object | None = None) -> np.ndarray:
         return decode(
             buf,
-            sensitivity=self.photon_sensitivity,
+            conversion_gain=self.conversion_gain,
             zero_level=self.zero_level,
             encoded_dtype=self.encoded_dtype,
             decoded_dtype=self.decoded_dtype,
@@ -143,12 +141,12 @@ class AnscombeCodecV2:
         return {
             "id": self.codec_id, 
             "zero_level": self.zero_level, 
-            "photon_sensitivity": self.photon_sensitivity
+            "conversion_gain": self.conversion_gain
             }
     
     @classmethod
     def from_config(cls, config: AnscomeCodecJSON_V2) -> Self:
-        return cls(zero_level=config["zero_level"], photon_sensitivity=config["photon_sensitivity"])
+        return cls(zero_level=config["zero_level"], conversion_gain=config["conversion_gain"])
 
 
 numcodecs.register_codec(AnscombeCodecV2)
@@ -162,7 +160,7 @@ class AnscombeCodecV3(ArrayArrayCodec):
     ----------
     zero_level : int
         Signal level when no photons are recorded.
-    photon_sensitivity : float
+    conversion_gain : float
         Estimated signal intensity increase per quantum (e.g. photon)
     encoded_dtype : str
         Data type for encoded (compressed) data.
@@ -170,7 +168,7 @@ class AnscombeCodecV3(ArrayArrayCodec):
         Data type for decoded (original) data.
     """
     zero_level: int
-    photon_sensitivity: float
+    conversion_gain: float
     encoded_dtype: str = "uint8"
     decoded_dtype: str = "int16"
     is_fixed_size: bool = True
@@ -181,7 +179,7 @@ class AnscombeCodecV3(ArrayArrayCodec):
         config = data.get("configuration", {})
         return cls(
             zero_level=config["zero_level"],
-            photon_sensitivity=config["photon_sensitivity"],
+            conversion_gain=config["conversion_gain"],
             encoded_dtype=config.get("encoded_dtype", "uint8"),
             decoded_dtype=config.get("decoded_dtype", "int16")
         )
@@ -192,7 +190,7 @@ class AnscombeCodecV3(ArrayArrayCodec):
             "name": "anscombe-v1",
             "configuration": {
                 "zero_level": self.zero_level,
-                "photon_sensitivity": self.photon_sensitivity,
+                "conversion_gain": self.conversion_gain,
                 "encoded_dtype": self.encoded_dtype,
                 "decoded_dtype": self.decoded_dtype
             }
@@ -212,7 +210,7 @@ class AnscombeCodecV3(ArrayArrayCodec):
         """Synchronous encode method for direct use."""
         return encode(
             buf,
-            sensitivity=self.photon_sensitivity,
+            conversion_gain=self.conversion_gain,
             zero_level=self.zero_level,
             encoded_dtype=self.encoded_dtype
         )
@@ -221,7 +219,7 @@ class AnscombeCodecV3(ArrayArrayCodec):
         """Synchronous decode method for direct use."""
         return decode(
             buf.tobytes(),
-            sensitivity=self.photon_sensitivity,
+            conversion_gain=self.conversion_gain,
             zero_level=self.zero_level,
             encoded_dtype=self.encoded_dtype,
             decoded_dtype=self.decoded_dtype
