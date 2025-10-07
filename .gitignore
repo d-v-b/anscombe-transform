@@ -136,3 +136,7 @@ src/anscombe_transform/version.py
 
 # VSCode
 .vscode/
+
+# Example data
+examples/*.zarr
+examples/*.gif
