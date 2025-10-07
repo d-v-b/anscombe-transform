@@ -1,35 +1,30 @@
 """
 Numcodecs Codec implementation for Anscombe Transform for photon-limited data.
 """
-
 from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import ClassVar, Literal, Self, TypedDict
-
-import numcodecs
+from typing import ClassVar, Literal, Self
 import numpy as np
+import numcodecs
 import numpy.typing as npt
+from typing import TypedDict
 from zarr.abc.codec import ArrayArrayCodec
 from zarr.core.array_spec import ArraySpec
 from zarr.core.dtype import parse_dtype
-
 
 class AnscombeCodecConfig(TypedDict):
     zero_level: int
     conversion_gain: float
 
-
 class AnscomeCodecJSON_V2(AnscombeCodecConfig):
     id: Literal["anscombe-v1"]
-
 
 def make_anscombe_lookup(
     conversion_gain: float,
     input_max: int = 0x7FFF,
     zero_level: int = 0,
     beta: float = 0.5,
-    output_type: str = "uint8",
+    output_type: str="uint8",
 ) -> np.ndarray:
     """
     Compute the Anscombe lookup table.
@@ -38,13 +33,16 @@ def make_anscombe_lookup(
     :param input_max: the maximum value in the input
     :param beta: the grayscale quantization step expressed in units of noise std dev
     """
-    xx = (np.r_[: input_max + 1] - zero_level) / conversion_gain  # input expressed in photon rates
+    xx = (
+        np.r_[: input_max + 1] - zero_level
+    ) / conversion_gain  # input expressed in photon rates
     zero_slope = 1 / beta / np.sqrt(3 / 8)  # slope for negative values
     offset = zero_level * zero_slope / conversion_gain
     lookup_table = np.round(
         offset
         + (xx < 0) * (xx * zero_slope)
-        + (xx >= 0) * (2.0 / beta * (np.sqrt(np.maximum(0, xx) + 3 / 8) - np.sqrt(3 / 8)))
+        + (xx >= 0)
+        * (2.0 / beta * (np.sqrt(np.maximum(0, xx) + 3 / 8) - np.sqrt(3 / 8)))
     )
     lookup = lookup_table.astype(output_type)
     assert np.diff(lookup_table).min() >= 0, "non-monotonic lookup generated"
@@ -63,10 +61,12 @@ def lookup(movie: np.ndarray, lookup_table: np.ndarray) -> np.ndarray:
     """Apply lookup table to movie"""
     return lookup_table[np.maximum(0, np.minimum(movie, lookup_table.size - 1))]
 
-
 def encode(
-    buf: np.ndarray, *, conversion_gain: float, zero_level: int, encoded_dtype: str
-) -> np.ndarray:
+        buf: np.ndarray, 
+        *, 
+        conversion_gain: float, 
+        zero_level: int, 
+        encoded_dtype: str) -> np.ndarray:
     """
     Encode an array into a buffer of bytes.
     """
@@ -78,15 +78,13 @@ def encode(
     encoded = lookup(buf, lut)
     return encoded.astype(encoded_dtype)
 
-
 def decode(
-    buf: bytes | np.ndarray,
-    *,
-    conversion_gain: float,
-    zero_level: int,
-    encoded_dtype: npt.DtypeLike,
-    decoded_dtype: npt.DTypeLike,
-) -> np.ndarray:
+        buf: bytes | np.ndarray, 
+        *, 
+        conversion_gain: float, 
+        zero_level: int, 
+        encoded_dtype: npt.DtypeLike, 
+        decoded_dtype: npt.DTypeLike) -> np.ndarray:
     """
     Decode an array from a buffer of bytes.
     """
@@ -95,13 +93,14 @@ def decode(
         output_type=encoded_dtype,
         zero_level=zero_level,
     )
-    inverse_table = make_inverse_lookup(lookup_table, output_type=decoded_dtype)
+    inverse_table = make_inverse_lookup(
+        lookup_table, output_type=decoded_dtype
+    )
     decoded = np.frombuffer(buf, dtype=encoded_dtype)
     return lookup(decoded, inverse_table).astype(decoded_dtype)
 
-
 @dataclass(frozen=True, slots=True)
-class AnscombeTransformV2:
+class AnscombeCodecV2:
     """Codec for 3-dimensional Filter. The codec assumes that input data are of shape:
     (time, x, y).
 
@@ -128,7 +127,7 @@ class AnscombeTransformV2:
             zero_level=self.zero_level,
             encoded_dtype=self.encoded_dtype,
         )
-
+    
     def decode(self, buf: bytes, out: object | None = None) -> np.ndarray:
         return decode(
             buf,
@@ -140,21 +139,21 @@ class AnscombeTransformV2:
 
     def get_config(self) -> AnscomeCodecJSON_V2:
         return {
-            "id": self.codec_id,
-            "zero_level": self.zero_level,
-            "conversion_gain": self.conversion_gain,
-        }
-
+            "id": self.codec_id, 
+            "zero_level": self.zero_level, 
+            "conversion_gain": self.conversion_gain
+            }
+    
     @classmethod
     def from_config(cls, config: AnscomeCodecJSON_V2) -> Self:
         return cls(zero_level=config["zero_level"], conversion_gain=config["conversion_gain"])
 
 
-numcodecs.register_codec(AnscombeTransformV2)
+numcodecs.register_codec(AnscombeCodecV2)
 
 
 @dataclass(frozen=True, slots=True)
-class AnscombeTransformV3(ArrayArrayCodec):
+class AnscombeCodecV3(ArrayArrayCodec):
     """Zarr v3 codec for Anscombe Transform for photon-limited data.
 
     Parameters
@@ -168,7 +167,6 @@ class AnscombeTransformV3(ArrayArrayCodec):
     decoded_dtype : str
         Data type for decoded (original) data.
     """
-
     zero_level: int
     conversion_gain: float
     encoded_dtype: str = "uint8"
@@ -183,7 +181,7 @@ class AnscombeTransformV3(ArrayArrayCodec):
             zero_level=config["zero_level"],
             conversion_gain=config["conversion_gain"],
             encoded_dtype=config.get("encoded_dtype", "uint8"),
-            decoded_dtype=config.get("decoded_dtype", "int16"),
+            decoded_dtype=config.get("decoded_dtype", "int16")
         )
 
     def to_dict(self) -> dict:
@@ -194,8 +192,8 @@ class AnscombeTransformV3(ArrayArrayCodec):
                 "zero_level": self.zero_level,
                 "conversion_gain": self.conversion_gain,
                 "encoded_dtype": self.encoded_dtype,
-                "decoded_dtype": self.decoded_dtype,
-            },
+                "decoded_dtype": self.decoded_dtype
+            }
         }
 
     def resolve_metadata(self, chunk_spec: ArraySpec) -> ArraySpec:
@@ -214,7 +212,7 @@ class AnscombeTransformV3(ArrayArrayCodec):
             buf,
             conversion_gain=self.conversion_gain,
             zero_level=self.zero_level,
-            encoded_dtype=self.encoded_dtype,
+            encoded_dtype=self.encoded_dtype
         )
 
     def _decode(self, buf: np.ndarray) -> np.ndarray:
@@ -224,7 +222,7 @@ class AnscombeTransformV3(ArrayArrayCodec):
             conversion_gain=self.conversion_gain,
             zero_level=self.zero_level,
             encoded_dtype=self.encoded_dtype,
-            decoded_dtype=self.decoded_dtype,
+            decoded_dtype=self.decoded_dtype
         )
 
     async def _encode_single(
@@ -263,5 +261,4 @@ class AnscombeTransformV3(ArrayArrayCodec):
 
 # Register codec with zarr
 from zarr.registry import register_codec
-
-register_codec("anscombe-v1", AnscombeTransformV3)
+register_codec("anscombe-v1", AnscombeCodecV3)
