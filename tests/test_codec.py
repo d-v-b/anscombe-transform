@@ -23,13 +23,13 @@ sensitivity = 100.0
 
 
 @pytest.fixture
-def test_data(dtype="int16"):
+def test_data(dtype="int16") -> list[np.ndarray, np.ndarray]:
     test2d = make_poisson_ramp_signals(shape=(50, 1, 1), min_rate=1, max_rate=5, dtype=dtype)
     test2d_long = make_poisson_ramp_signals(shape=(1, 50, 1), min_rate=1, max_rate=5, dtype=dtype)
     return [test2d, test2d_long]
 
 
-def test_poisson_encode_decode(test_data):
+def test_poisson_encode_decode(test_data: np.ndarray) -> None:
     codec = AnscombeTransformV2(
         zero_level=0,
         conversion_gain=sensitivity,
