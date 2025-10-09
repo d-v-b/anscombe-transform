@@ -4,10 +4,22 @@ Parameter estimation for Anscombe Transform codec.
 This module provides functions to estimate codec parameters (photon sensitivity
 and zero level) from temporal variance analysis of movie data.
 """
+from __future__ import annotations
+
+from typing import TypedDict
 
 import numpy as np
 from sklearn.linear_model import HuberRegressor as Regressor
 
+
+class ConversionGainConfig(TypedDict):
+    model: Regressor
+    counts: np.ndarray
+    min_intensity: int | float
+    max_intensity: int | float
+    variance: np.ndarray
+    conversion_gain: float
+    zero_level: float
 
 def _longest_run(bool_array: np.ndarray) -> slice:
     """
@@ -30,7 +42,7 @@ def _longest_run(bool_array: np.ndarray) -> slice:
     return slice(on[i], off[i])
 
 
-def compute_conversion_gain(movie: np.array, count_weight_gamma: float = 0.2) -> dict:
+def compute_conversion_gain(movie: np.array, count_weight_gamma: float = 0.2) -> ConversionGainConfig:
     """
     Calculate photon sensitivity and zero level from temporal variance analysis.
 
@@ -50,22 +62,7 @@ def compute_conversion_gain(movie: np.array, count_weight_gamma: float = 0.2) ->
     Returns
     -------
     dict
-        Dictionary with the following keys:
-
-        - 'model' : HuberRegressor
-            The fitted regression model.
-        - 'counts' : np.ndarray
-            Pixel counts per intensity bin.
-        - 'min_intensity' : int
-            Minimum intensity value used in fitting.
-        - 'max_intensity' : int
-            Maximum intensity value used in fitting.
-        - 'variance' : np.ndarray
-            Computed variance at each intensity level.
-        - 'sensitivity' : float
-            Estimated photon sensitivity (ADU per photon).
-        - 'zero_level' : float
-            Estimated baseline signal level with no photons.
+        `ConversionGainConfig`
 
     Raises
     ------
@@ -105,15 +102,15 @@ def compute_conversion_gain(movie: np.array, count_weight_gamma: float = 0.2) ->
     )
     model = Regressor()
     model.fit(np.c_[bins], variance, counts**count_weight_gamma)
-    sensitivity = model.coef_[0]
+    conversion_gain = model.coef_[0]
     zero_level = -model.intercept_ / model.coef_[0]
 
-    return dict(
-        model=model,
-        counts=counts,
-        min_intensity=bins.start,
-        max_intensity=bins.stop,
-        variance=variance,
-        sensitivity=sensitivity,
-        zero_level=zero_level,
-    )
+    return {
+        "model": model,
+        "counts":  counts,
+        "min_intensity": bins.start,
+        "max_intensity" : bins.stop,
+        "variance": variance,
+        "conversion_gain": conversion_gain,
+        "zero_level": zero_level,
+    }
