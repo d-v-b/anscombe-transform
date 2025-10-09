@@ -1,3 +1,10 @@
+"""
+Parameter estimation for Anscombe Transform codec.
+
+This module provides functions to estimate codec parameters (photon sensitivity
+and zero level) from temporal variance analysis of movie data.
+"""
+
 import numpy as np
 from sklearn.linear_model import HuberRegressor as Regressor
 
@@ -5,9 +12,15 @@ from sklearn.linear_model import HuberRegressor as Regressor
 def _longest_run(bool_array: np.ndarray) -> slice:
     """
     Find the longest contiguous segment of True values inside bool_array.
-    Args:
-        bool_array: 1d boolean array.
-    Returns:
+
+    Parameters
+    ----------
+    bool_array : np.ndarray
+        1D boolean array.
+
+    Returns
+    -------
+    slice
         Slice with start and stop for the longest contiguous block of True values.
     """
     step = np.diff(np.int8(bool_array), prepend=0, append=0)
@@ -18,21 +31,46 @@ def _longest_run(bool_array: np.ndarray) -> slice:
 
 
 def compute_sensitivity(movie: np.array, count_weight_gamma: float = 0.2) -> dict:
-    """Calculate photon sensitivity
+    """
+    Calculate photon sensitivity and zero level from temporal variance analysis.
 
-    Args:
-        movie (np.array):  A movie in the format (time, height, width).
-        count_weight_gamma: 0.00001=weigh each intensity level equally,
-            1.0=weigh each intensity in proportion to pixel counts.
+    This function estimates camera parameters by fitting the noise transfer function
+    from temporal variance. It uses HuberRegressor to robustly fit the relationship
+    between mean signal and variance.
 
-    Returns:
-        dict: A dictionary with the following keys:
-            - 'model': The fitted TheilSenRegressor model.
-            - 'min_intensity': Minimum intensity used.
-            - 'max_intensity': Maximum intensity used.
-            - 'variance': Variances at intensity levels.
-            - 'sensitivity': Sensitivity.
-            - 'zero_level': X-intercept.
+    Parameters
+    ----------
+    movie : np.ndarray
+        A movie in the format (time, height, width).
+    count_weight_gamma : float, optional
+        Weighting exponent for pixel counts in regression, by default 0.2.
+        - 0.0: weigh each intensity level equally
+        - 1.0: weigh each intensity in proportion to pixel counts
+
+    Returns
+    -------
+    dict
+        Dictionary with the following keys:
+
+        - 'model' : HuberRegressor
+            The fitted regression model.
+        - 'counts' : np.ndarray
+            Pixel counts per intensity bin.
+        - 'min_intensity' : int
+            Minimum intensity value used in fitting.
+        - 'max_intensity' : int
+            Maximum intensity value used in fitting.
+        - 'variance' : np.ndarray
+            Computed variance at each intensity level.
+        - 'sensitivity' : float
+            Estimated photon sensitivity (ADU per photon).
+        - 'zero_level' : float
+            Estimated baseline signal level with no photons.
+
+    Raises
+    ------
+    AssertionError
+        If movie is not 3-dimensional or if insufficient intensity range is present.
     """
     assert movie.ndim == 3, (
         f"Thee dimensions (Time x Height x Width) of grayscale movie expected, got {movie.ndim} dimensions"
