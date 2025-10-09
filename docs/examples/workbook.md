@@ -19,7 +19,7 @@ This example demonstrates:
 ```python
 import numpy as np
 import zarr
-from anscombe_transform import AnscombeTransformV3, compute_sensitivity
+from anscombe_transform import AnscombeTransformV3, compute_conversion_gain
 import matplotlib.pyplot as plt
 ```
 
@@ -52,7 +52,7 @@ Now estimate the codec parameters from the data:
 
 ```python
 # Estimate parameters from the movie
-result = compute_sensitivity(camera_signal)
+result = compute_conversion_gain(camera_signal)
 
 estimated_gain = result['sensitivity']
 estimated_zero = result['zero_level']

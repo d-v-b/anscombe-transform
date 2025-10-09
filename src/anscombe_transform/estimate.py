@@ -30,7 +30,7 @@ def _longest_run(bool_array: np.ndarray) -> slice:
     return slice(on[i], off[i])
 
 
-def compute_sensitivity(movie: np.array, count_weight_gamma: float = 0.2) -> dict:
+def compute_conversion_gain(movie: np.array, count_weight_gamma: float = 0.2) -> dict:
     """
     Calculate photon sensitivity and zero level from temporal variance analysis.
 

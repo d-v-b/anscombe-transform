@@ -60,14 +60,14 @@ recovered = arr[:]
 If you don't know the `zero_level` and `conversion_gain` parameters, you can estimate them from your data:
 
 ```python
-from anscombe_transform import compute_sensitivity
+from anscombe_transform import compute_conversion_gain
 import numpy as np
 
 # Load your movie data as (time, height, width)
 movie = np.random.poisson(lam=50, size=(100, 512, 512))
 
 # Estimate parameters
-result = compute_sensitivity(movie)
+result = compute_conversion_gain(movie)
 
 print(f"Estimated conversion gain: {result['sensitivity']:.3f}")
 print(f"Estimated zero level: {result['zero_level']:.3f}")
