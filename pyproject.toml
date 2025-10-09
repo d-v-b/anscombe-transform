@@ -196,3 +196,11 @@ filterwarnings = [
     "error",
     "ignore:Numcodecs codecs are not in the Zarr version 3 specification.*:UserWarning"
 ]
+
+[tool.numpydoc_validation]
+checks = [
+    "all",  # Enable all checks
+    "ES01", # Allow missing extended summary
+    "SA01", # Allow missing See Also section
+    "EX01", # Allow missing Examples section
+]
