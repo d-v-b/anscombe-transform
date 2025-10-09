@@ -34,9 +34,9 @@ def compute_sensitivity(movie: np.array, count_weight_gamma: float = 0.2) -> dic
             - 'sensitivity': Sensitivity.
             - 'zero_level': X-intercept.
     """
-    assert (
-        movie.ndim == 3
-    ), f"Thee dimensions (Time x Height x Width) of grayscale movie expected, got {movie.ndim} dimensions"
+    assert movie.ndim == 3, (
+        f"Thee dimensions (Time x Height x Width) of grayscale movie expected, got {movie.ndim} dimensions"
+    )
 
     # assume that negative values are due to noise
     movie = np.maximum(0, movie.astype(np.int32, copy=False))
@@ -52,9 +52,9 @@ def compute_sensitivity(movie: np.array, count_weight_gamma: float = 0.2) -> dic
         counts > 0.01 * counts.mean()
     )  # consider only bins with at least 1% of mean counts
     bins = slice(max(bins.stop * 3 // 100, bins.start), bins.stop)
-    assert (
-        bins.stop - bins.start > 100
-    ), f"The image does not have a sufficient range of intensities to compute the noise transfer function."
+    assert bins.stop - bins.start > 100, (
+        "The image does not have a sufficient range of intensities to compute the noise transfer function."
+    )
 
     counts = counts[bins]
     idx = (intensity >= bins.start) & (intensity < bins.stop)

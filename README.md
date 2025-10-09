@@ -1,4 +1,4 @@
-[![PyPI version](https://badge.fury.io/py/anscombe-numcodecs.svg)](https://badge.fury.io/py/anscombe-numcodecs) ![tests](https://github.com/datajoint/anscombe-numcodecs/actions/workflows/tests.yaml/badge.svg)
+[![PyPI version](https://badge.fury.io/py/anscombe-transform.svg)](https://badge.fury.io/py/anscombe-transform) ![tests](https://github.com/datajoint/anscombe-transform/actions/workflows/tests.yaml/badge.svg)
 
 # Anscombe numcodecs
 
@@ -20,16 +20,16 @@ The codec is used in Zarr as a filter prior to compression.
 Install via `pip`:
 
 ```
-pip install anscombe-numcodecs
+pip install anscombe-transform
 ```
 
 ### Developer installation
 
 ```
-conda create -n anscombe_numcodecs python=3.xx
-conda activate anscombe_numcodecs
-git clone https://github.com/datajoint/anscombe-numcodecs.git
-cd anscombe-numcodecs
+conda create -n anscombe_transform python=3.xx
+conda activate anscombe_transform
+git clone https://github.com/datajoint/anscombe-transform.git
+cd anscombe-transform
 pip install -r requirements.txt
 pip install -e .
 ```

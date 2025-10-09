@@ -127,3 +127,16 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Automatically-generated version indicator
+src/anscombe_transform/version.py
+
+# OSX file system db
+.DS_Store
+
+# VSCode
+.vscode/
+
+# Example data
+examples/*.zarr
+examples/*.gif

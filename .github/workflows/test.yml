@@ -1,0 +1,72 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / py${{ matrix.python }} / np${{ matrix.numpy }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest"]
+        python: ["3.11", "3.12", "3.13"]
+        numpy: ["1.26", "2.2"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install Hatch
+        run: pip install hatch
+
+      - name: Run tests
+        run: hatch run test.py${{ matrix.python }}-${{ matrix.numpy }}:pytest tests/
+
+  test-upstream:
+    name: Test upstream dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Hatch
+        run: pip install hatch
+
+      - name: Run tests with upstream dependencies
+        run: hatch run upstream:pytest tests/
+
+  test-complete:
+    name: All tests passed
+    if: always()
+    needs: [test, test-upstream]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check test matrix status
+        if: needs.test.result != 'success'
+        run: exit 1
+      - name: Check upstream test status
+        if: needs.test-upstream.result != 'success'
+        run: exit 1
