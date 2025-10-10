@@ -1,7 +1,10 @@
-from anscombe_numcodecs import AnscombeCodecV2
 import numpy as np
 import pytest
+
+from anscombe_transform import AnscombeTransformV2
+
 from .conftest import nearly_equal
+
 
 def make_poisson_ramp_signals(shape=(10, 1, 1), min_rate=1, max_rate=5, dtype="int16"):
     assert isinstance(shape, tuple)
@@ -11,28 +14,31 @@ def make_poisson_ramp_signals(shape=(10, 1, 1), min_rate=1, max_rate=5, dtype="i
     for x_ind in range(x):
         for y_ind in range(y):
             output_array[x_ind, y_ind, :] = sensitivity * np.random.poisson(
-                np.arange(min_rate, max_rate, (max_rate-min_rate)/times))
-    return output_array.astype('int16')
+                np.arange(min_rate, max_rate, (max_rate - min_rate) / times)
+            )
+    return output_array.astype("int16")
+
 
 sensitivity = 100.0
 
+
 @pytest.fixture
-def test_data(dtype="int16"):
-    test2d =  make_poisson_ramp_signals(shape=(50, 1, 1), min_rate=1, max_rate=5, dtype=dtype)
+def test_data(dtype="int16") -> list[np.ndarray, np.ndarray]:
+    test2d = make_poisson_ramp_signals(shape=(50, 1, 1), min_rate=1, max_rate=5, dtype=dtype)
     test2d_long = make_poisson_ramp_signals(shape=(1, 50, 1), min_rate=1, max_rate=5, dtype=dtype)
     return [test2d, test2d_long]
 
-def test_poisson_encode_decode(test_data):
-    codec = AnscombeCodecV2(
+
+def test_poisson_encode_decode(test_data: np.ndarray) -> None:
+    codec = AnscombeTransformV2(
         zero_level=0,
         conversion_gain=sensitivity,
-        encoded_dtype='uint8', 
-        decoded_dtype='int16'
+        encoded_dtype="uint8",
+        decoded_dtype="int16",
     )
     for example_data in test_data:
         encoded = codec.encode(example_data)
         decoded = codec.decode(encoded)
         recoded = codec.decode(codec.encode(decoded))
-        assert nearly_equal(decoded, example_data, sensitivity/2)
+        assert nearly_equal(decoded, example_data, sensitivity / 2)
         assert (decoded == recoded).all()
-
