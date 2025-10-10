@@ -12,6 +12,8 @@ This transformation is useful in sensing applications to mitigate [shot noise](h
 
 ### Encoding
 
+#### Parameters
+
 In addition to the input array, the encoding procedure takes the following parameters:
 
 | name | type | 
@@ -21,7 +23,39 @@ In addition to the input array, the encoding procedure takes the following param
 | `beta` | real number from the inverval `(0, 1]` |
 | `encoded_dtype` | Zarr V3 data type | 
 
-For each element `x` of the input array, an output value `y` is generated via the following procedure:
+#### Algorithm
+
+For each element $x$ of the input array, an output value $y$ is generated via the following procedure:
+
+
+1. $x$ is normalized by subtracting $\text{zero\_level}$ and then dividing by $\text{conversion\_gain}$. The result of this transformation, called $x_{\text{norm}}$, now models a quantity of observed events. 
+    
+    Schematically:
+
+    $x_{\text{norm}} := \frac{x - \text{zero\_level}}{\text{conversion\_gain}}$
+
+2. If $x_{\text{norm}}$ is non-negative, we apply the Anscombe transform, multiply by a scaling factor, and add an offset, and bind $\text{result}$ to the result. Schematically, the transformation is as follows:
+
+$$
+\text{result} := \frac{1}{\text{beta}} \left(\frac{\text{zero\_level}}{\text{conversion\_gain} \, *  \sqrt{3/8}}
++ 2 \left( \sqrt{x_{\text{norm}} + \tfrac{3}{8}} - \sqrt{\tfrac{3}{8}} \right)\right)
+$$
+
+The additional scaling and offset factors ensure that the transform maps the $\text{zero\_level}$ value to $0$, and also that the transform is continuous around 0, because we will use linear extrapolation to resolve negative values of $x_{\text{norm}}$.
+
+When $x_{\text{norm}}$ is negative, we bind $\text{result}$ to $x$ divided by the product of $\text{beta}$ , $\text{conversion\_gain}$, and $\sqrt{3/8}$. This is effectively linear extrapolation from 0 in the negative direction. Schematically:
+
+$$
+\text{result} :=      \frac
+        {x}
+        {\text{beta} * \text{conversion\_gain} *\sqrt{3/8} } 
+$$
+
+If `encoded_dtype` denotes an integer data type, then $\text{result}$ is rounded before the data type casting procedure.
+
+#### Reference python function
+
+The above procedure is implemented in the following reference Python function:
 
 ```python
 import math
@@ -32,18 +66,22 @@ def anscombe_transform(x, conversion_gain, zero_level, beta, encoded_dtype):
     zero_slope = 1.0 / (beta * math.sqrt(3.0 / 8.0))
     offset = zero_level * zero_slope / conversion_gain
 
-    if value < 0:
+    if event_rate < 0:
         # Linear extrapolation
-        result = offset + value * zero_slope
+        result = offset + event_rate * zero_slope
     else:
         # Anscombe transform
-        result = offset + (2.0 / beta) * (math.sqrt(value + 3.0 / 8.0) - math.sqrt(3.0 / 8.0))
+        result = offset + (2.0 / beta) * (math.sqrt(event_rate + 3.0 / 8.0) - math.sqrt(3.0 / 8.0))
     
     # This assumes the existence of a cast_dtype procedure 
+    # When converting from a floating point to an integer data type,
+    # values should be rounded prior to type conversion
     return cast_dtype(result, encoded_dtype)
-
 ```
 ### Decoding
+
+#### Parameters
+
 
 In addition to the input array, the decoding procedure takes the following parameters:
 
@@ -75,4 +113,4 @@ In addition to the input array, the decoding procedure takes the following param
 
 ### Supported array data types
 
-This codec is compatible with any array data type that supports the operations required to implement the Anscombe transformation and its inverse. 
+This codec is compatible with array data types that model real numbers or a subset of the real numbers. 
