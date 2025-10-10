@@ -1,6 +1,6 @@
 # `anscombe-transform` Codec
 
-This specification defines an array-array codec that encodes an input array using the [Anscombe transform](https://en.wikipedia.org/wiki/Anscombe_transform) followed by an optional data type casting operations and decodes using the inverted type cast and the inverse Anscombe transform. This transformation is not generally lossless, but is useful as for conditioning data prior to compression.
+This specification defines an [array->array codec](https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html#id22) that encodes an input array using the [Anscombe transform](https://en.wikipedia.org/wiki/Anscombe_transform) followed by an optional data type casting operations and decodes using the inverted type cast and the inverse Anscombe transform. This transformation is not generally lossless, but is useful as for conditioning data prior to compression.
 
 ## Anscombe transform
 
@@ -53,6 +53,8 @@ In addition to the input array, the decoding procedure takes the following param
 | `zero_level` | real number |
 | `beta` | real number from the inverval `(0, 1]` |
 | `encoded_dtype` | Zarr V3 data type | 
+
+<todo>
 
 ## Codec metadata
 
