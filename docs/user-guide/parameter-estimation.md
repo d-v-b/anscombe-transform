@@ -7,19 +7,19 @@ To use the Anscombe Transform codec effectively, you need two key parameters:
 
 This guide explains how to estimate these parameters from your data.
 
-## The `compute_sensitivity()` Function
+## The `compute_conversion_gain()` Function
 
 The codec provides a built-in parameter estimation function:
 
 ```python
-from anscombe_transform import compute_sensitivity
+from anscombe_transform import compute_conversion_gain
 import numpy as np
 
 # Load your movie data as (time, height, width)
 movie = load_my_movie()  # Shape: (n_frames, height, width)
 
 # Estimate parameters
-result = compute_sensitivity(movie)
+result = compute_conversion_gain(movie)
 
 print(f"Conversion gain: {result['sensitivity']:.3f}")
 print(f"Zero level: {result['zero_level']:.3f}")
@@ -27,7 +27,7 @@ print(f"Zero level: {result['zero_level']:.3f}")
 
 ### Input Requirements
 
-The `compute_sensitivity()` function expects:
+The `compute_conversion_gain()` function expects:
 - **Shape**: `(time, height, width)` - temporal axis must be first
 - **Data type**: Integer or float
 - **Minimum frames**: At least 10-20 frames for reliable estimation
@@ -167,14 +167,14 @@ assert max_error < 2 * result['sensitivity']
 
 ```python
 import numpy as np
-from anscombe_transform import compute_sensitivity, AnscombeTransformV3
+from anscombe_transform import compute_conversion_gain, AnscombeTransformV3
 import zarr
 
 # 1. Load temporal data
 movie = load_movie()  # Shape: (100, 512, 512)
 
 # 2. Estimate parameters
-params = compute_sensitivity(movie)
+params = compute_conversion_gain(movie)
 print(f"Estimated parameters:")
 print(f"  Conversion gain: {params['sensitivity']:.3f} ADU/photon")
 print(f"  Zero level: {params['zero_level']:.1f} ADU")

@@ -204,3 +204,6 @@ checks = [
     "SA01", # Allow missing See Also section
     "EX01", # Allow missing Examples section
 ]
+
+[tool.codespell]
+ignore-words-list = "Nd"
