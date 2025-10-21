@@ -20,7 +20,7 @@ In addition to the input array, the encoding procedure takes the following param
 | - | - | 
 | `conversion_gain` | positive real number |
 | `zero_level` | real number |
-| `beta` | real number from the inverval `(0, 1]` |
+| `beta` | positive real number | ratio of quantization step / noise
 | `encoded_dtype` | Zarr V3 data type | 
 
 #### Algorithm
@@ -28,7 +28,7 @@ In addition to the input array, the encoding procedure takes the following param
 For each element $x$ of the input array, an output value $y$ is generated via the following procedure:
 
 
-1. $x$ is normalized by subtracting $\text{zero\_level}$ and then dividing by $\text{conversion\_gain}$. The result of this transformation, called $x_{\text{norm}}$, now models a quantity of observed events. 
+1. $x$ is normalized by subtracting $\text{zero\_level}$ and then dividing by $\text{conversion\_gain}$. The result of this transformation, called $x_{\text{norm}}$, now represents a quantity of observed events. 
     
     Schematically:
 
@@ -80,8 +80,11 @@ def anscombe_transform(x, conversion_gain, zero_level, beta, encoded_dtype):
 ```
 ### Decoding
 
-#### Parameters
+#### Algorithm
 
+To decode Anscombe-transformed data, invert the [encoding algorithm](#algorithm). Depending on the choice of output data type, the decoded data may not match exactly the input.
+
+#### Parameters
 
 In addition to the input array, the decoding procedure takes the following parameters:
 
@@ -89,28 +92,28 @@ In addition to the input array, the decoding procedure takes the following param
 | - | - | 
 | `conversion_gain` | positive real number |
 | `zero_level` | real number |
-| `beta` | real number from the inverval `(0, 1]` |
-| `encoded_dtype` | Zarr V3 data type | 
+| `beta` | positive real number |
+| `decoded_dtype` | Zarr V3 data type | 
 
-<todo>
+These are the same as the parameters used for the [encoding procedure](#parameters) minus the `encoded_dtype`; the `decoded_dtype` is required instead.
 
 ## Codec metadata
 
 | field | type | required | notes |
 | - | - | - | - |
-| `"name"` | literal `"anscombe-transform"` | yes | |
-| `"configuration"` | [anscombe transform configuration](#configuration-metadata) | yes | |
+| `name` | literal `"anscombe-transform"` | yes | |
+| `configuration` | [anscombe transform configuration](#configuration-metadata) | yes | |
 
 #### Configuration metadata
 
 | field | type | required | notes |
 | - | - | - | - |
-| `"zero_level"` | number | yes | The value in the input array that corresponds to 0 detected events.
-| `"beta"` | number from the interval `(0, 1]` | yes | <TODO> |
-| `"conversion_gain"` | positive number | yes | The magnitude of a single recorded event in the input data |
-| `"decoded_dtype"` | Zarr V3 data type metadata| yes | The data type of the *input array*. |
-| `"encoded_dtype"` | Zarr V3 data type metadata| yes | The data type of the output array. |  
+| `zero_level` | number | yes | The value in the input array that corresponds to 0 detected events.
+| `beta` | positive number | yes | Ratio of quantization step to noise. Typical values are between 0.5 and 2.  |
+| `conversion_gain` | positive number | yes | The magnitude of a single recorded event in the input data |
+| `decoded_dtype` | Zarr V3 data type metadata| yes | The Zarr data type of the *input array*. |
+| `encoded_dtype` | Zarr V3 data type metadata| yes | The Zarr data type of the output array. |  
 
 ### Supported array data types
 
-This codec is compatible with array data types that model real numbers or a subset of the real numbers. 
+This codec is compatible with array data types that model real numbers or a subset thereof. 
