@@ -58,12 +58,17 @@ If `encoded_dtype` denotes an integer data type, then $\text{result}$ is rounded
 The above procedure is implemented in the following reference Python function:
 
 ```python
-import math
-def anscombe_transform(x, conversion_gain, zero_level, beta, encoded_dtype):
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["zarr>=3.1.1", "numpy==2.2"]
+# ///
+import numpy as np
+from zarr.core.dtype import ZDType
+def anscombe_transform(x, conversion_gain: float, zero_level: float, beta: float, encoded_dtype: ZDType):
     # Convert to event units
     event_rate = (x - zero_level) / conversion_gain
 
-    zero_slope = 1.0 / (beta * math.sqrt(3.0 / 8.0))
+    zero_slope = 1.0 / (beta * np.sqrt(3.0 / 8.0))
     offset = zero_level * zero_slope / conversion_gain
 
     if event_rate < 0:
@@ -71,12 +76,14 @@ def anscombe_transform(x, conversion_gain, zero_level, beta, encoded_dtype):
         result = offset + event_rate * zero_slope
     else:
         # Anscombe transform
-        result = offset + (2.0 / beta) * (math.sqrt(event_rate + 3.0 / 8.0) - math.sqrt(3.0 / 8.0))
+        result = offset + (2.0 / beta) * (np.sqrt(event_rate + 3.0 / 8.0) - np.sqrt(3.0 / 8.0))
     
-    # This assumes the existence of a cast_dtype procedure 
     # When converting from a floating point to an integer data type,
     # values should be rounded prior to type conversion
-    return cast_dtype(result, encoded_dtype)
+    np_dtype = encoded_dtype.to_native_dtype()
+    if np_dtype.kind in {"i", "u"}:
+        return np.astype(np.round(result), np_dtype)
+    return np.astype(result, np_dtype)
 ```
 ### Decoding
 
