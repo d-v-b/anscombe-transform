@@ -16,6 +16,8 @@ nav:
     - Parameter Estimation: user-guide/parameter-estimation.md
     - Zarr V2 Integration: user-guide/zarr-v2.md
     - Zarr V3 Integration: user-guide/zarr-v3.md
+  - Spec:
+    - anscombe-transform: spec/anscombe_transform.md 
   - API Reference:
     - Codec: api/codec.md
     - Estimation: api/estimate.md
