@@ -1,34 +1,78 @@
-name:  Release to PyPI
+name: Publish to PyPI
 
 on:
-  push:
-    tags:
-       - '*'
+  release:
+    types:
+      - published
+  workflow_dispatch:
 
 jobs:
-  deploy:
-
+  dist:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          python-version: 3.9
-      - name: Install dependencies for testing
-        run: |
-          pip install pytest
-          pip install zarr
-          pip install setuptools wheel twine
-          pip install .
-      - name: Test core with pytest
-        run: |
-          pytest -v
-      - name: Publish on PyPI
+          fetch-depth: 0
+
+      - name: Build and inspect package
+        uses: hynek/build-and-inspect-python-package@v2
+
+  publish:
+    needs: dist
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+
+    steps:
+      - name: Download built artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Packages
+          path: dist
+
+      - name: Configure publish credentials
+        id: publish-config
         env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.AIND_PYPI_TOKEN }}
+          RELEASE_NAME: ${{ github.event.release.name }}
+          DEFAULT_USERNAME: ${{ secrets.twine_username }}
+          DEFAULT_PASSWORD: ${{ secrets.twine_password }}
+          TEST_USERNAME: ${{ secrets.twine_test_username }}
+          TEST_PASSWORD: ${{ secrets.twine_test_password }}
         run: |
-          python setup.py sdist
-          twine upload dist/*
+          set -euo pipefail
+
+          repository="pypi"
+          username="$DEFAULT_USERNAME"
+          password="$DEFAULT_PASSWORD"
+
+          if [[ -n "${RELEASE_NAME}" && "${RELEASE_NAME}" =~ ^[Tt]est ]]; then
+            if [[ -z "${TEST_USERNAME}" || -z "${TEST_PASSWORD}" ]]; then
+              echo "::error::Test PyPI credentials are required for releases starting with 'Test'"
+              exit 1
+            fi
+            repository="testpypi"
+            username="$TEST_USERNAME"
+            password="$TEST_PASSWORD"
+          fi
+
+          if [[ -z "${username}" || -z "${password}" ]]; then
+            echo "::error::PyPI credentials are not configured"
+            exit 1
+          fi
+
+          {
+            echo "repository=${repository}"
+            echo "username=${username}"
+            echo "password=${password}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish distribution
+        env:
+          TWINE_USERNAME: ${{ steps.publish-config.outputs.username }}
+          TWINE_PASSWORD: ${{ steps.publish-config.outputs.password }}
+          TWINE_REPOSITORY: ${{ steps.publish-config.outputs.repository }}
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install twine
+          twine upload --repository "${TWINE_REPOSITORY}" dist/*
