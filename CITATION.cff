@@ -1,0 +1,53 @@
+cff-version: 1.2.0
+title: Anscombe Transform Codec
+message: If you use this software, please cite it.
+version: 1.0.0
+repository-code: https://github.com/datajoint/anscombe-transform
+abstract: >
+  Codec implementation of the Anscombe transform for compressing photon-limited
+  microscopy, radiography, and astronomy image recordings, published by DataJoint.
+authors:
+  - family-names: Yatsenko
+    given-names: Dimitri
+    email: dimitr@datajoint.com
+  - family-names: Lecoq
+    given-names: Jerome
+    email: jeromel@alleninstitute.org
+  - family-names: Bennett
+    given-names: Davis
+    email: davis.v.bennett@gmail.com
+contact:
+  - family-names: Yatsenko
+    given-names: Dimitri
+    email: dimitr@datajoint.com
+license: MIT
+preferred-citation:
+  type: article
+  title: Standardized measurements for monitoring and comparing multiphoton microscope systems
+  authors:
+    - family-names: Lees
+      given-names: Robert M.
+    - family-names: Bianco
+      given-names: Isaac H.
+    - family-names: Campbell
+      given-names: Robert A. A.
+    - family-names: Orlova
+      given-names: Natalia
+    - family-names: Peterka
+      given-names: Darcy S.
+    - family-names: Pichler
+      given-names: Bruno
+    - family-names: Smith
+      given-names: Spencer LaVere
+    - family-names: Yatsenko
+      given-names: Dimitri
+    - family-names: Yu
+      given-names: Che-Hang
+    - family-names: Packer
+      given-names: Adam M.
+  journal: Nature Protocols
+  volume: '20'
+  pages: 1-38
+  date-published: 2025-03-17
+  doi: 10.1038/s41596-024-01120-w
+  url: https://doi.org/10.1038/s41596-024-01120-w

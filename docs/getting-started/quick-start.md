@@ -9,18 +9,25 @@ import zarr
 import numpy as np
 from anscombe_transform import AnscombeTransformV3
 
-# Generate sample data with Poisson noise
-# Simulating photon-limited imaging data
-data = np.random.poisson(lam=50, size=(100, 512, 512)).astype('int16')
+# Synthesize data with Poisson noise - simulating photon-limited microscopy data
+n_frames, height, width = 50, 256, 256
+mean_photon_rate = 5.0  # Average photons per pixel (exponential distribution of rates)
+zero_level = 20.0   # camera baseline
+conversion_gain = 30.0  # levels per photon
+photon_rate = np.random.exponential(scale=mean_photon_rate, size=(1, height, width))
+photon_counts = np.random.poisson(np.tile(photon_rate, (n_frames, 1, 1)))
+measured_signal = photon_counts + np.random.randn(*size) * 0.2
+
+data = (zero_level + conversion_gain * measured_signal).astype('int16')
 
 # Create a Zarr array with the Anscombe codec
 store = zarr.storage.MemoryStore()
 arr = zarr.create(
     store=store,
     shape=data.shape,
-    chunks=(10, 512, 512),
+    chunks=(12, 160, 80),
     dtype='int16',
-    filters=[AnscombeTransformV3(zero_level=100, conversion_gain=2.5)],
+    filters=[AnscombeTransformV3(zero_level=zero_level, conversion_gain=conversion_gain)],
     zarr_format=3
 )
 
@@ -44,10 +51,10 @@ import zarr
 arr = zarr.open_array(
     'data.zarr',
     mode='w',
-    shape=(100, 512, 512),
-    chunks=(10, 512, 512),
+    shape=data.shape,
+    chunks=(12, 160, 80),
     dtype='int16',
-    compressor=AnscombeTransformV2(zero_level=100, conversion_gain=2.5)
+    compressor=AnscombeTransformV2(zero_level=zero_level, conversion_gain=conversion_gain)
 )
 
 # Write and read data
@@ -64,10 +71,10 @@ from anscombe_transform import compute_conversion_gain
 import numpy as np
 
 # Load your movie data as (time, height, width)
-movie = np.random.poisson(lam=50, size=(100, 512, 512))
+movie = data
 
 # Estimate parameters
-result = compute_conversion_gain(movie)
+result = compute_conversion_gain(data)
 
 print(f"Estimated conversion gain: {result['sensitivity']:.3f}")
 print(f"Estimated zero level: {result['zero_level']:.3f}")
@@ -90,10 +97,10 @@ from anscombe_transform import AnscombeTransformV3
 
 # For Zarr V3, use filters + codecs
 arr = zarr.create(
-    shape=(100, 512, 512),
+    shape=data.shape,
     chunks=(10, 512, 512),
     dtype='int16',
-    filters=[AnscombeTransformV3(zero_level=100, conversion_gain=2.5)],
+    filters=[AnscombeTransformV3(zero_level=zero_level, conversion_gain=conversion_gain)],
     compressor={'id': 'blosc', 'cname': 'zstd', 'clevel': 5},
     zarr_format=3
 )
@@ -102,7 +109,7 @@ arr = zarr.create(
 ## Key Parameters
 
 - **`zero_level`**: The signal value when no photons are detected. This is the baseline offset in your camera sensor.
-- **`conversion_gain`** (also called `photon_sensitivity`): How many signal units correspond to one photon. For example, if your camera reports 2.5 ADU per photon, use `conversion_gain=2.5`.
+- **`conversion_gain`** (also called `photon_sensitivity`): How many signal units correspond to one photon. For example, if your camera reports 2.5 levels increase in signal per photon, use `conversion_gain=2.5`.
 - **`encoded_dtype`**: The data type for encoded values (default: `uint8`). Use `uint8` for maximum compression.
 - **`decoded_dtype`**: The data type for decoded values (default: inferred from data).
 
