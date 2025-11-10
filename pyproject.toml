@@ -7,8 +7,8 @@ name = "anscombe_transform"
 version = "1.0.0"
 
 authors = [
-  { name = "Jerome Lecoq", email = "jeromel@alleninstitute.org" },
   { name = "Dimitri Yatsenko", email = "dimitr@datajoint.com" },
+  { name = "Jerome Lecoq", email = "jeromel@alleninstitute.org" },
   { name = "Davis Bennett", email = "davis.v.bennett@gmail.com" },
 ]
 maintainers = [

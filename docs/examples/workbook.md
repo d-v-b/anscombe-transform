@@ -29,17 +29,19 @@ First, let's create synthetic data that mimics photon-limited imaging:
 
 ```python
 # Parameters for synthetic data
-n_frames = 100
-height, width = 512, 512
-mean_photons = 50  # Average photons per pixel
-zero_level = 100   # Camera baseline
-conversion_gain = 2.5  # ADU per photon
+n_frames = 30
+height, width = 120, 120
+mean_photon_rate = 5.0  # Average photons per pixel (exponential distribution of rates)
+zero_level = -10.0   # camera baseline
+conversion_gain = 2.5  # levels per photon
 
 # Generate Poisson-distributed photon counts
-photon_counts = np.random.poisson(lam=mean_photons, size=(n_frames, height, width))
+photon_rate = np.random.exponential(scale=5, size=(1, height, width))
+photon_counts = np.random.poisson(lam=np.tile(photon_rate, (n_frames, 1, 1)))
+measured_signal = photon_counts + np.random.randn(*size) * 0.2
 
-# Convert to camera signal (ADU)
-camera_signal = (photon_counts * conversion_gain + zero_level).astype('int16')
+# Convert to camera signal
+camera_signal = (measured_signal * conversion_gain + zero_level).astype('int16')
 
 print(f"Data shape: {camera_signal.shape}")
 print(f"Data range: [{camera_signal.min()}, {camera_signal.max()}]")
@@ -58,16 +60,16 @@ estimated_gain = result['sensitivity']
 estimated_zero = result['zero_level']
 
 print(f"\nTrue parameters:")
-print(f"  Conversion gain: {conversion_gain:.3f} ADU/photon")
-print(f"  Zero level: {zero_level:.1f} ADU")
+print(f"  Conversion gain: {conversion_gain:.3f} units/photon")
+print(f"  Zero level: {zero_level:.1f} ")
 
 print(f"\nEstimated parameters:")
-print(f"  Conversion gain: {estimated_gain:.3f} ADU/photon")
-print(f"  Zero level: {estimated_zero:.1f} ADU")
+print(f"  Conversion gain: {estimated_gain:.3f} units/photon")
+print(f"  Zero level: {estimated_zero:.1f}")
 
 print(f"\nEstimation error:")
-print(f"  Gain error: {abs(estimated_gain - conversion_gain):.3f} ADU/photon")
-print(f"  Zero level error: {abs(estimated_zero - zero_level):.1f} ADU")
+print(f"  Gain error: {abs(estimated_gain - conversion_gain):.3f} units/photon")
+print(f"  Zero level error: {abs(estimated_zero - zero_level):.1f} units")
 ```
 
 ## Visualize Noise Model
