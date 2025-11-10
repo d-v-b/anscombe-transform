@@ -5,7 +5,7 @@
 This codec is designed for compressing image recordings with Poisson noise such as in microscopy, radiography, and astronomy.
 
 **Status:** This is the official and actively maintained Anscombe transform codec for Zarr/Numcodecs, maintained by DataJoint.
-It originated as a fork of [AllenNeuralDynamics/poisson-numcodecs](https://github.com/AllenNeuralDynamics/poisson-numcodecs) and earlier develpoments at https://github.com/datajoint/compress-multiphoton. It has since diverged significantly. New users should rely on this repository as the canonical source.
+It originated as a fork of [AllenNeuralDynamics/poisson-numcodecs](https://github.com/AllenNeuralDynamics/poisson-numcodecs) and earlier developments at https://github.com/datajoint/compress-multiphoton. It has since diverged significantly. New users should rely on this repository as the canonical source.
 
 The codec assumes that the video is linearly encoded with a potential offset (`zero_level`) and that the `conversion_gain` (also called `photon_sensitivity`)—the average increase in intensity per photon—is either already known or can be accurately estimated from the data.
 
