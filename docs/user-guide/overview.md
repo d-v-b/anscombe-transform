@@ -74,7 +74,7 @@ These tables are computed once during codec initialization and reused for all en
 ### Compression Ratios
 
 Typical compression ratios (Anscombe + Blosc/Zstd):
-- **4-8x** for typical multiphoton microscopy data
+- **3-8x** for typical multiphoton microscopy data
 - **6-10x** for astronomy data
 - **3-6x** for radiography data
 
