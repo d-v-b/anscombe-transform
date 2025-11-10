@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "anscombe_transform"
-dynamic = ["version"]
+version = "1.0.0"
 
 authors = [
   { name = "Jerome Lecoq", email = "jeromel@alleninstitute.org" },
