@@ -39,7 +39,6 @@ def test_zarr_v2_roundtrip() -> None:
     # read data
     z_arr_r = open_array(store=store)
     assert z_arr_r.dtype == decoded_dtype
-    breakpoint()
     assert nearly_equal(z_arr_r, data_rt, sensitivity * 0.5)
 
 
